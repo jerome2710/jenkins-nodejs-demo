@@ -41,3 +41,5 @@ jspm_packages
 
 # App specific
 playerstats.db
+public/assets/css/styles.css
+public/assets/css/styles.css.map

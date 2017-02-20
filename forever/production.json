@@ -1,7 +1,0 @@
-{
-    "uid": "app",
-    "append": true,
-    "watch": false,
-    "script": "app.js",
-    "sourceDir": "/var/www/lanquiz/build"
-}

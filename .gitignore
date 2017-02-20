@@ -38,3 +38,6 @@ jspm_packages
 
 # Editor
 .idea
+
+# App specific
+playerstats.db

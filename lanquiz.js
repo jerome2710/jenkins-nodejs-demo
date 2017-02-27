@@ -148,7 +148,11 @@ function playerJoinGame(data) {
     var sock = this;
 
     // Look up the room ID in the Socket.IO manager object.
-    var room = gameSocket.manager.rooms["/" + data.gameId];
+    // var room = gameSocket.manager.rooms["/" + data.gameId];
+    var room = gameSocket.adapter.rooms[data.gameId];
+
+    console.log(room);
+    console.log(data.gameId);
 
     // If the room exists...
     if (room != undefined) {

@@ -1,0 +1,21 @@
+.btn {
+  padding: $btn-padding-y $btn-padding-x;
+  margin: 6px 0;
+  text-transform: uppercase;
+  font-size: $btn-font-size;
+  font-weight: bold;
+  background-color: $color-giraffe;
+  transition: all 0.3s;
+  border-radius: 2px;
+  border: $btn-border-width solid $color-giraffe;
+  color: white;
+
+  &:hover {
+    background-color: white;
+    color: $color-giraffe;
+  }
+
+  &.btn-full {
+    width: 100%;
+  }
+}

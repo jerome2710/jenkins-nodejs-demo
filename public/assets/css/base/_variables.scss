@@ -7,4 +7,17 @@
 /*------------------------------------*\
     COLORS
 \*------------------------------------*/
-$color-giraffe:             #fddf00;
+$color-giraffe: #fddf00;
+$mine_shaft:    #3a3a3a;
+$tarawera:      #093a58;
+
+/*------------------------------------*\
+    Media query breakpoints
+\*------------------------------------*/
+$brk-narrow : '(min-width: 769px)';
+$brk-wide   : '(min-width: 1024px)';
+
+$btn-font-size: 14px;
+$btn-padding-x: 10px;
+$btn-padding-y: 6px;
+$btn-border-width: 2px;

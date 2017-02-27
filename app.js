@@ -7,26 +7,24 @@ var app = express();
 // Serve static html, js, css, and image files from the 'public' directory
 app.use(express.static('public'));
 
-// Import the fs
-var fs = require('fs');
-
 // Import the Lanquiz game file.
 var lanquiz = require('./lanquiz');
 
-// Creating database file if not exists
-var file = 'playerstats.db';
-var exists = fs.existsSync(file);
+// Setup database connection
+var mysql       = require('mysql');
+var connection  = mysql.createConnection({
+    host        : 'localhost',
+    user        : 'lanquiz',
+    password    : '5Gsv77dnCm',
+    database    : 'lanquiz'
+});
 
-if (!exists) {
-    fs.openSync(file, 'w');
-}
-
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database(file);
-
-db.serialize(function() {
-    if (!exists) {
-        db.run('CREATE TABLE player (player_name TEXT, player_win INT)');
+// Connect and create table if not exists
+connection.connect(function(err){
+    if (!err) {
+        connection.query('CREATE TABLE IF NOT EXISTS playerstats (player_name TEXT, score INT)');
+    } else {
+        console.log('Error connecting database with message ' + err.message);
     }
 });
 

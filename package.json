@@ -1,46 +1,46 @@
 {
-    "name": "Lanquiz",
-    "description": "Lanquiz - NodeJS multiplayer language game",
-    "version": "0.0.1",
-    "private": true,
-    "dependencies": {
-        "express": "4.x",
-        "socket.io": "1.7",
-        "sqlite3": "^3.1.4",
-        "del": "^2.2.2",
-        "gulp-autoprefixer": "^3.1.1",
-        "gulp-imagemin": "^3.0.3"
-    },
-    "main": "app.js",
-    "devDependencies": {
-        "gulp": "^3.9.1",
-        "gulp-concat": "^2.6",
-        "gulp-group-files": "^2.0.0",
-        "gulp-notify": "^2.2.0",
-        "gulp-plumber": "^1.1.0",
-        "gulp-rename": "^1.2.0",
-        "gulp-rev": "^7.0.0",
-        "gulp-sass": "^2.3.2",
-        "gulp-sourcemaps": "^2",
-        "gulp-svg2png": "^0.3.0",
-        "gulp-svgstore": "^6.1.0",
-        "gulp-tasker": "^0.2.1",
-        "gulp-uglify": "^1.5.4",
-        "require-dir": "^0.3.0",
-        "walk": "^2.3.9"
-    },
-    "scripts": {
-        "test": "node app.js",
-        "start": "node app.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/jerome2710/jenkins-nodejs-demo.git"
-    },
-    "author": "",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/jerome2710/jenkins-nodejs-demo/issues"
-    },
-    "homepage": "https://github.com/jerome2710/jenkins-nodejs-demo"
+  "name": "Lanquiz",
+  "description": "Lanquiz - NodeJS multiplayer language game",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "del": "^2.2.2",
+    "express": "4.x",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-imagemin": "^3.0.3",
+    "mysql": "^2.13.0",
+    "socket.io": "1.7"
+  },
+  "main": "app.js",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6",
+    "gulp-group-files": "^2.0.0",
+    "gulp-notify": "^2.2.0",
+    "gulp-plumber": "^1.1.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-rev": "^7.0.0",
+    "gulp-sass": "^2.3.2",
+    "gulp-sourcemaps": "^2",
+    "gulp-svg2png": "^0.3.0",
+    "gulp-svgstore": "^6.1.0",
+    "gulp-tasker": "^0.2.1",
+    "gulp-uglify": "^1.5.4",
+    "require-dir": "^0.3.0",
+    "walk": "^2.3.9"
+  },
+  "scripts": {
+    "test": "node app.js",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jerome2710/jenkins-nodejs-demo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jerome2710/jenkins-nodejs-demo/issues"
+  },
+  "homepage": "https://github.com/jerome2710/jenkins-nodejs-demo"
 }

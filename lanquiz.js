@@ -45,12 +45,13 @@ exports.initGame = function (sio, socket, sdb) {
 /**
  * The 'START' button was clicked and 'hostCreateNewGame' event occurred.
  */
-function hostCreateNewGame() {
+function hostCreateNewGame(data) {
+
     // Create a unique Socket.IO Room
     var thisGameId = ( Math.random() * 100000 ) | 0;
 
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
-    this.emit('newGameCreated', {gameId: thisGameId, mySocketId: this.id});
+    this.emit('newGameCreated', {gameId: thisGameId, levelId: data.level, mySocketId: this.id});
 
     // Join the Room and wait for the players
     this.join(thisGameId.toString());
@@ -60,23 +61,30 @@ function hostCreateNewGame() {
  * Two players have joined. Alert the host!
  * @param gameId The game ID / room ID
  */
-function hostPrepareGame(gameId) {
+function hostPrepareGame(gameId, levelId) {
     var sock = this;
     var data = {
         mySocketId: sock.id,
-        gameId: gameId
+        gameId: gameId,
+        levelId: levelId
     };
     //console.log("All Players Present. Preparing game...");
     io.sockets.in(data.gameId).emit('beginNewGame', data);
 }
 
-/*
+/**
  * The Countdown has finished, and the game begins!
  * @param gameId The game ID / room ID
+ * @param levelId The game level ID
  */
-function hostStartGame(gameId) {
-    console.log('Game Started.');
-    sendWord(0, gameId);
+function hostStartGame(gameId, levelId) {
+    console.log('Game Started with level: ' + levelId);
+
+    if (levelId === 1) {
+        sendWord(0, gameId);
+    } else {
+        // sendQuestion();
+    }
 }
 
 /**
@@ -84,27 +92,44 @@ function hostStartGame(gameId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
-    if (data.round < wordPool.length) {
-        // Send a new set of words back to the host and players.
-        sendWord(data.round, data.gameId);
-    } else {
 
-        if (!data.done) {
-            // updating players win count
-            db.all("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
-                rows.forEach(function (row) {
-                    win = row.player_win;
-                    win++;
-                    console.log(win);
-                    db.run("UPDATE player SET player_win = ? WHERE player_name = ?", win, data.winner);
-                    console.log(row.player_name, row.player_win);
-                });
-            });
-            data.done++;
-        }
-        // If the current round exceeds the number of words, send the 'gameOver' event.
-        io.sockets.in(data.gameId).emit('gameOver', data);
+    // Determine pool based on the level
+    var pool = null;
+    if (data.levelId === 1) {
+        pool = wordPool;
+    } else {
+        pool = questionPool;
     }
+
+    // Next round if we have more questions - else end game
+    if (data.round < pool.length) {
+        sendWord(data.round, data.gameId, data.levelId);
+    } else {
+        endGame(data);
+    }
+}
+
+/**
+ * End the game if all rounds are played
+ *
+ * @param data
+ */
+function endGame(data) {
+    if (!data.done) {
+        // updating players win count
+        db.query("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
+            rows.forEach(function (row) {
+                win = row.player_win;
+                win++;
+                console.log(win);
+                db.run("UPDATE player SET player_win = ? WHERE player_name = ?", win, data.winner);
+                console.log(row.player_name, row.player_win);
+            });
+        });
+        data.done++;
+    }
+    // If the current round exceeds the number of words, send the 'gameOver' event.
+    io.sockets.in(data.gameId).emit('gameOver', data);
 }
 
 // function for finding leader
@@ -332,3 +357,5 @@ var wordPool = [
         "decoys": ["snout", "tongs", "stent", "tense", "terns", "santo", "stony", "toons", "snort", "stint"]
     }
 ];
+
+var questionPool = wordPool;

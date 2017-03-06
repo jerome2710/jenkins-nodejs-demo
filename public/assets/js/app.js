@@ -72,7 +72,7 @@ jQuery(function($){
          * @param data {{playerName: string, gameId: int, mySocketId: int}}
          */
         playerJoinedRoom : function(data) {
-            // When a player joins a room, do the updateWaitingScreen funciton.
+            // When a player joins a room, do the updateWaitingScreen function.
             // There are two versions of this function: one for the 'host' and
             // another for the 'player'.
             //
@@ -106,7 +106,7 @@ jQuery(function($){
          * @param data
          */
         hostCheckAnswer : function(data) {
-            if(App.myRole === 'Host') {
+            if (App.myRole === 'Host') {
                 App.Host.checkAnswer(data);
             }
         },
@@ -137,6 +137,11 @@ jQuery(function($){
          *
          */
         gameId: 0,
+
+        /**
+         * Keep track of the chosen level, currently only 1 or 2
+         */
+        levelId: 1,
 
         /**
          * This is used to differentiate between 'Host' and 'Player' browsers.
@@ -192,7 +197,8 @@ jQuery(function($){
          */
         bindEvents: function () {
             // Host
-            App.$doc.on('click', '#btnCreateGame', App.Host.onCreateClick);
+            App.$doc.on('click', '#btnCreateGameLevelOne', {level:1}, App.Host.onCreateClick);
+            App.$doc.on('click', '#btnCreateGameLevelTwo', {level:2}, App.Host.onCreateClick);
 
             // Player
             App.$doc.on('click', '#btnJoinGame', App.Player.onJoinClick);
@@ -224,6 +230,9 @@ jQuery(function($){
         {
             App.$gameArea.html(App.$templateIntroScreen);
         },
+
+
+
         /* *******************************
          *         HOST CODE           *
          ******************************* */
@@ -253,18 +262,19 @@ jQuery(function($){
 
             /**
              * Handler for the "Start" button on the Title Screen.
+             * @param event Object
              */
-            onCreateClick: function () {
-                // console.log('Clicked "Create A Game"');
-                IO.socket.emit('hostCreateNewGame');
+            onCreateClick: function (event) {
+                IO.socket.emit('hostCreateNewGame', {level:event.data.level});
             },
 
             /**
              * The Host screen is displayed for the first time.
-             * @param data{{ gameId: int, mySocketId: * }}
+             * @param data{{ gameId: int, mySocketId: *, levelId: int}}
              */
             gameInit: function (data) {
                 App.gameId = data.gameId;
+                App.levelId = data.levelId;
                 App.mySocketId = data.mySocketId;
                 App.myRole = 'Host';
                 App.Host.numPlayersInRoom = 0;
@@ -279,6 +289,9 @@ jQuery(function($){
             displayNewGameScreen : function() {
                 // Fill the game screen with the appropriate HTML
                 App.$gameArea.html(App.$templateNewGame);
+
+                // Display level on screen
+                $('#gameLevel').text(App.levelId);
 
                 // Display the URL on screen
                 $('#gameURL').text(window.location.href);
@@ -312,7 +325,7 @@ jQuery(function($){
                     // console.log('Room is full. Almost ready!');
 
                     // Let the server know that two players are present.
-                    IO.socket.emit('hostRoomFull',App.gameId);
+                    IO.socket.emit('hostRoomFull', App.gameId, App.levelId);
                 }
             },
 
@@ -327,7 +340,7 @@ jQuery(function($){
                 // Begin the on-screen countdown timer
                 var $secondsLeft = $('#hostWord');
                 App.countDown( $secondsLeft, 5, function(){
-                    IO.socket.emit('hostCountdownFinished', App.gameId);
+                    IO.socket.emit('hostCountdownFinished', App.gameId, App.levelId);
                 });
 
                 // Display the players' names on screen
@@ -365,13 +378,13 @@ jQuery(function($){
                 // Verify that the answer clicked is from the current round.
                 // This prevents a 'late entry' from a player whos screen has not
                 // yet updated to the current round.
-                if (data.round === App.currentRound){
+                if (data.round === App.currentRound) {
 
                     // Get the player's score
                     var $pScore = $('#' + data.playerId);
 
                     // Advance player's score if it is correct
-                    if( App.Host.currentCorrectAnswer === data.answer ) {
+                    if (App.Host.currentCorrectAnswer === data.answer) {
                         // Add 5 to the player's score
                         $pScore.text( +$pScore.text() + 5 );
 
@@ -380,8 +393,9 @@ jQuery(function($){
 
                         // Prepare data to send to the server
                         var nextRound = {
-                            gameId : App.gameId,
-                            round : App.currentRound
+                            gameId: App.gameId,
+                            levelId: App.levelId,
+                            round: App.currentRound
                         };
 
                         // Notify the server to start the next round.

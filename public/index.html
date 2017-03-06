@@ -32,7 +32,8 @@
                 <h1>Lanquiz</h1>
 
                 <div class="buttons">
-                    <button id="btnCreateGame" class="btn btn-full">CREATE</button>
+                    <button id="btnCreateGameLevelOne" class="btn btn-full">CREATE Level 1</button>
+                    <button id="btnCreateGameLevelTwo" class="btn btn-full">CREATE Level 2</button>
                     <button id="btnJoinGame" class="btn btn-full">JOIN</button>
                     <button id="leaderboard" class="btn btn-full">LEADER BOARD</button>
                 </div>
@@ -44,6 +45,9 @@
         <!-- This screen appears when a user clicks "CREATE" on the Title Screen -->
         <script id="create-game-template" type="text/template">
             <div class="createGameWrapper wrapper">
+
+                <div class="info">You create a new game with level </div>
+                <div id="gameLevel">&nbsp;</div>
 
                 <div class="info">Open this site on your mobile device:</div>
                 <div id="gameURL" class="infoBig">Error!</div>

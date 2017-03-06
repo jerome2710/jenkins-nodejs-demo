@@ -1,5 +1,5 @@
 var should = require('should');
-var io = require('socket.io/node_modules/socket.io-client');
+var io = require('socket.io-client');
 
 var host = io.connect('http://localhost:3000');
 var gameId = 0;

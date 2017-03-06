@@ -1,3 +1,5 @@
-# jenkins-nodejs-demo
+# Lanquiz - Multiplayer Language Quiz
 
-test - 20-02-2017 15:25
+Development 6B - Software Delivery
+Daan Grootenboer (0865052)
+Jerome Anker (0864155)

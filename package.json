@@ -26,11 +26,13 @@
     "gulp-svgstore": "^6.1.0",
     "gulp-tasker": "^0.2.1",
     "gulp-uglify": "^1.5.4",
+    "mocha-jenkins-reporter": "^0.3.7",
     "require-dir": "^0.3.0",
     "walk": "^2.3.9"
   },
   "scripts": {
     "test": "node app.js",
+    "test-jenkins": "JUNIT_REPORT_PATH=build/logs/mocha-report.xml mocha --colors --reporter mocha-jenkins-reporter",
     "start": "node app.js"
   },
   "repository": {

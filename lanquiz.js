@@ -45,12 +45,12 @@ exports.initGame = function (sio, socket, sdb) {
 /**
  * The 'START' button was clicked and 'hostCreateNewGame' event occurred.
  */
-function hostCreateNewGame() {
+function hostCreateNewGame(level) {
     // Create a unique Socket.IO Room
     var thisGameId = ( Math.random() * 100000 ) | 0;
 
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
-    this.emit('newGameCreated', {gameId: thisGameId, mySocketId: this.id});
+    this.emit('newGameCreated', {gameId: thisGameId, mySocketId: this.id, level: level});
 
     // Join the Room and wait for the players
     this.join(thisGameId.toString());
@@ -77,6 +77,8 @@ function hostPrepareGame(gameId) {
 function hostStartGame(gameId) {
     console.log('Game Started.');
     sendWord(0, gameId);
+    
+    // sendQuestion(0,gameId);
 }
 
 /**
@@ -91,7 +93,7 @@ function hostNextRound(data) {
 
         if (!data.done) {
             // updating players win count
-            db.all("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
+            db.query("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
                 rows.forEach(function (row) {
                     win = row.player_win;
                     win++;
@@ -113,7 +115,7 @@ function findLeader() {
     var sock = this;
     var i = 0;
     leader = {};
-    db.all("SELECT * FROM player ORDER BY player_win DESC LIMIT 10", function (err, rows) {
+    db.query("SELECT * FROM player ORDER BY player_win DESC LIMIT 10", function (err, rows) {
         if (rows != undefined) {
             rows.forEach(function (row) {
                 leader[i] = {};
@@ -218,6 +220,11 @@ function sendWord(wordPoolIndex, gameId) {
     io.sockets.in(gameId).emit('newWordData', data);
 }
 
+function sendQuestion(wordPoolIndex, gameId) {
+    var data = getQuestionData(wordPoolIndex);
+    io.sockets.in(gameId).emit('newQuestionData', data);
+}
+
 /**
  * This function does all the work of getting a new words from the pile
  * and organizing the data to be sent back to the clients.
@@ -244,6 +251,32 @@ function getWordData(i) {
         word: words[0],   // Displayed Word
         answer: words[1], // Correct Answer
         list: decoys      // Word list for player (decoys and answer)
+    };
+}
+
+function getQuestionData(i) {
+    // Randomize the order of the available words.
+    // The first element in the randomized array will be displayed on the host screen.
+    // The second element will be hidden in a list of decoys as the correct answer
+
+    // var words = shuffle(questionPool[i].question);
+
+    console.log(questionPool[i].options);
+
+
+    // Randomize the order of the decoy words and choose the first 5
+    var options = shuffle(questionPool[i].options).slice(0, 5);
+
+    // Pick a random spot in the decoy list to put the correct answer
+    var rnd = Math.floor(Math.random() * 5);
+    options.splice(rnd, 0, questionPool[i].answer);
+
+    // Package the words into a single object.
+    return {
+        round: i,
+        question: questionPool[i].question,   // Displayed Word
+        answer: questionPool[i].answer, // Correct Answer
+        list: options      // Word list for player (decoys and answer)
     };
 }
 
@@ -330,5 +363,18 @@ var wordPool = [
     {
         "words": ["stone", "tones", "steno", "onset"],
         "decoys": ["snout", "tongs", "stent", "tense", "terns", "santo", "stony", "toons", "snort", "stint"]
+    }
+];
+
+var questionPool = [
+    {
+        "question": 'Wat is "Hond" in het Engels?',
+        "answer": "Dog",
+        "options": ["Cat", "Bird", "Rabbit", "Giraffe"]
+    },
+    {
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Londen", "Amsterdam", "Manchester", "Liverpool", "leeds"]
     }
 ];

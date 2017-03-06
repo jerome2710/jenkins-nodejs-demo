@@ -27,6 +27,7 @@ jQuery(function($){
             IO.socket.on('playerJoinedRoom', IO.playerJoinedRoom );
             IO.socket.on('beginNewGame', IO.beginNewGame );
             IO.socket.on('newWordData', IO.onNewWordData);
+            IO.socket.on('newQuestionData', IO.onNewQuestionData);
             IO.socket.on('hostCheckAnswer', IO.hostCheckAnswer);
             IO.socket.on('gameOver', IO.gameOver);
             IO.socket.on('error', IO.error );
@@ -64,6 +65,8 @@ jQuery(function($){
          * @param data {{ gameId: int, mySocketId: * }}
          */
         onNewGameCreated : function(data) {
+            // console.log(data);
+
             App.Host.gameInit(data);
         },
 
@@ -99,6 +102,16 @@ jQuery(function($){
 
             // Change the word for the Host and Player
             App[App.myRole].newWord(data);
+        },
+
+        onNewQuestionData : function(data) {
+            // Update the current round
+            App.currentRound = data.round;
+
+            console.log(App[App.myRole]);
+
+            // Change the word for the Host and Player
+            App[App.myRole].newQuestion(data);
         },
 
         /**
@@ -137,6 +150,12 @@ jQuery(function($){
          *
          */
         gameId: 0,
+
+        /**
+         * Level
+         *
+         */
+        level: 1,
 
         /**
          * This is used to differentiate between 'Host' and 'Player' browsers.
@@ -193,11 +212,12 @@ jQuery(function($){
         bindEvents: function () {
             // Host
             App.$doc.on('click', '#btnCreateGame', App.Host.onCreateClick);
+            App.$doc.on('click', '#btnCreateGamelevel2', App.Host.onCreateClick);
 
             // Player
             App.$doc.on('click', '#btnJoinGame', App.Player.onJoinClick);
             App.$doc.on('click', '#btnStart',App.Player.onPlayerStartClick);
-            App.$doc.on('click', '.btnAnswer',App.Player.onPlayerAnswerClick);
+            App.$doc.on('click', '.btn-answer',App.Player.onPlayerAnswerClick);
             App.$doc.on('click', '#btnPlayerRestart', App.Player.onPlayerRestart);
             App.$doc.on('click', '#leaderboard', App.onLeaderboardClick);
             App.$doc.on('click', '#back', App.onBackClick);
@@ -255,7 +275,7 @@ jQuery(function($){
              * Handler for the "Start" button on the Title Screen.
              */
             onCreateClick: function () {
-                // console.log('Clicked "Create A Game"');
+
                 IO.socket.emit('hostCreateNewGame');
             },
 
@@ -351,6 +371,15 @@ jQuery(function($){
             newWord : function(data) {
                 // Insert the new word into the DOM
                 $('#hostWord').text(data.word);
+
+                // Update the data for the current round
+                App.Host.currentCorrectAnswer = data.answer;
+                App.Host.currentRound = data.round;
+            },
+
+            newQuestion : function(data) {
+                // Insert the new word into the DOM
+                $('#hostWord').text(data.question);
 
                 // Update the data for the current round
                 App.Host.currentCorrectAnswer = data.answer;
@@ -563,7 +592,29 @@ jQuery(function($){
                     $list                                //  <ul> </ul>
                         .append( $('<li/>')              //  <ul> <li> </li> </ul>
                             .append( $('<button/>')      //  <ul> <li> <button> </button> </li> </ul>
-                                .addClass('btnAnswer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass('btn-answer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass('btn')         //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
+                                .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>
+                            )
+                        )
+                });
+
+                // Insert the list onto the screen.
+                $('#gameArea').html($list);
+            },
+
+            newQuestion : function(data) {
+                // Create an unordered list element
+                var $list = $('<ul/>').attr('id','ulAnswers');
+
+                // Insert a list item for each word in the word list
+                // received from the server.
+                $.each(data.list, function(){
+                    $list                                //  <ul> </ul>
+                        .append( $('<li/>')              //  <ul> <li> </li> </ul>
+                            .append( $('<button/>')      //  <ul> <li> <button> </button> </li> </ul>
+                                .addClass('btn-answer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
                                 .addClass('btn')         //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
                                 .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
                                 .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>

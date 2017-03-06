@@ -54,7 +54,7 @@ jQuery(function($){
                 table+='<tr><td>'+data[j].name+'</td><td>'+data[j].win+'</td></tr>';
             }
             table+='</table></div>';
-            table+="<div id='mid'><button id='back' class='btn'>BACK</button></div>"
+            table+="<div id='mid'><button id='back' class='btn'>BACK</button></div>";
             console.log(table);
             App.$gameArea.append(table);
         },
@@ -379,13 +379,13 @@ jQuery(function($){
                         App.currentRound += 1;
 
                         // Prepare data to send to the server
-                        var data = {
+                        var nextRound = {
                             gameId : App.gameId,
                             round : App.currentRound
-                        }
+                        };
 
                         // Notify the server to start the next round.
-                        IO.socket.emit('hostNextRound',data);
+                        IO.socket.emit('hostNextRound', nextRound);
 
                     } else {
                         // A wrong answer was submitted, so decrement the player's score.
@@ -506,8 +506,8 @@ jQuery(function($){
                     playerId: App.mySocketId,
                     answer: answer,
                     round: App.currentRound
-                }
-                IO.socket.emit('playerAnswer',data);
+                };
+                IO.socket.emit('playerAnswer', data);
             },
 
             /**
@@ -518,7 +518,7 @@ jQuery(function($){
                 var data = {
                     gameId : App.gameId,
                     playerName : App.Player.myName
-                }
+                };
                 IO.socket.emit('playerRestart',data);
                 App.currentRound = 0;
                 $('#gameArea').html("<h3>Waiting on host to start new game.</h3>");
@@ -568,7 +568,7 @@ jQuery(function($){
                                 .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
                                 .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>
                             )
-                        )
+                        );
                 });
 
                 // Insert the list onto the screen.
@@ -615,7 +615,7 @@ jQuery(function($){
 
             // Decrement the displayed timer value on each 'tick'
             function countItDown(){
-                startTime -= 1
+                startTime -= 1;
                 $el.text(startTime);
 
                 if( startTime <= 0 ){

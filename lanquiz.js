@@ -98,7 +98,7 @@ function hostNextRound(data) {
                     console.log(win);
                     db.run("UPDATE player SET player_win = ? WHERE player_name = ?", win, data.winner);
                     console.log(row.player_name, row.player_win);
-                })
+                });
             });
             data.done++;
         }
@@ -113,16 +113,16 @@ function findLeader() {
     var sock = this;
     var i = 0;
     leader = {};
-    db.all("SELECT * FROM player ORDER BY player_win DESC LIMIT 10", function (err, rows) {
-        if (rows != undefined) {
+    db.query("SELECT * FROM player ORDER BY player_win DESC LIMIT 10", function (err, rows) {
+        if (rows !== undefined) {
             rows.forEach(function (row) {
                 leader[i] = {};
-                leader[i]['name'] = row.player_name;
-                leader[i]['win'] = row.player_win;
+                leader[i].name = row.player_name;
+                leader[i].win = row.player_win;
                 console.log(row.player_name);
                 console.log(row.player_win);
                 i++;
-            })
+            });
         }
         console.log("found leader");
         sock.emit('showLeader', leader);
@@ -155,7 +155,7 @@ function playerJoinGame(data) {
     console.log(data.gameId);
 
     // If the room exists...
-    if (room != undefined) {
+    if (room !== undefined) {
         // attach the socket id to the data object.
         data.mySocketId = sock.id;
 

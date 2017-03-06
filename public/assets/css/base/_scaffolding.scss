@@ -4,6 +4,78 @@
  * @author  : Jerome Anker <0864155@hr.nl> & Daan Grootenboer <0865052@hr.nl>
  */
 
+* {
+	box-sizing: border-box;
+}
+
 body {
+	font-family: Verdana, Geneva, sans-serif;
+	line-height: 1.6;
+	color: $mine_shaft;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 	background-color: $color-giraffe;
+}
+
+.wrapper {
+	flex: 1;
+	text-align: center;
+	background-color: white;
+	padding: 10px;
+
+	@media #{$brk-narrow} {
+		position: absolute;
+		padding: 20px;
+		transform: translate(-50%, -50%);
+		left: 50%;
+		top: 50%;
+		width: 80%;
+		margin: 0 auto;
+	}
+}
+
+.intro {
+	max-width: 300px;
+
+	h1 {
+		margin: 6px 0 20px;
+	}
+
+	input {
+		width: 100%;
+		font-size: 16px;
+		padding: 10px;
+	}
+}
+
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+p {
+	font-size: .95em;
+}
+
+h2,
+h3,
+a {
+	color: $tarawera;
+}
+
+h2,
+h3 {
+	margin-top: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+img {
+	max-width: 100%;
 }

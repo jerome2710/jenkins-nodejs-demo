@@ -1,15 +1,106 @@
 <!DOCTYPE html>
-<!--[if lt IE 8]><html class="lt-ie10 lt-ie9 lt-ie8"><![endif]-->
-<!--[if IE 8]><html class="lt-ie10 lt-ie9"><![endif]-->
-<!--[if IE 9]><html class="lt-ie10"><![endif]-->
-<!--[if gt IE 9]><!--><html><!--<![endif]-->
-    <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <title>Lanquiz - Multiplayer language quiz</title>
-    </head>
+<!--[if lt IE 8]>
+<html class="lt-ie10 lt-ie9 lt-ie8"><![endif]-->
+<!--[if IE 8]>
+<html class="lt-ie10 lt-ie9"><![endif]-->
+<!--[if IE 9]>
+<html class="lt-ie10"><![endif]-->
+<!--[if gt IE 9]><!-->
+<html><!--<![endif]-->
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Lanquiz - Multiplayer language quiz</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
     <body>
 
-    </body>
+
+        <div id="gameArea">
+            <!-- This is where the templates defined below will be used -->
+        </div>
+
+        <!-- Main Title Screen that appears when the page loads for the first time -->
+        <script id="intro-screen-template" type="text/template">
+
+            <div class="intro wrapper">
+
+                <h1>Lanquiz</h1>
+
+                <div class="buttons">
+                    <button id="btnCreateGame" class="btn btn-full">CREATE</button>
+                    <button id="btnJoinGame" class="btn btn-full">JOIN</button>
+                    <button id="leaderboard" class="btn btn-full">LEADER BOARD</button>
+                </div>
+
+            </div>
+
+        </script>
+
+        <!-- This screen appears when a user clicks "CREATE" on the Title Screen -->
+        <script id="create-game-template" type="text/template">
+            <div class="createGameWrapper wrapper">
+
+                <div class="info">Open this site on your mobile device:</div>
+                <div id="gameURL" class="infoBig">Error!</div>
+
+                <div class="info">Then click <strong>JOIN</strong> and <br/> enter the following Game ID:</div>
+                <div id="spanNewGameCode" class="gameId">Error!</div>
+
+                <div id="playersWaiting"></div>
+            </div>
+        </script>
+
+        <!-- This scrreen appears when a player clicks "JOIN" on the Title Screen -->
+        <script id="join-game-template" type="text/template">
+            <div class="joinGameWrapper wrapper">
+                <div class="info">
+                    <label for="inputPlayerName">Your Name:</label>
+                    <input id="inputPlayerName" type="text" />
+                </div>
+
+                <div class="info">
+                    <label for="inputGameId">Game ID:</label>
+                    <input id="inputGameId" type="text"/>
+                </div>
+
+                <div class="info buttons">
+                    <button id="btnStart" class="btn">Start</button>
+                    <div id="playerWaitingMessage"></div>
+                </div>
+            </div>
+        </script>
+
+        <!-- This is the 'Host' screen. It displays the word for each player to match -->
+        <script id="host-game-template" type="text/template">
+            <div id="wordArea">
+                <div id="hostWord">5</div>
+            </div>
+            <div id="playerScores">
+                <div id="player1Score" class="playerScore">
+                    <span class="score">0</span><span class="playerName">Player 1</span>
+                </div>
+                <div id="player2Score" class="playerScore">
+                    <span class="playerName">Player 2</span><span class="score">0</span>
+                </div>
+            </div>
+        </script>
+
+
+        <script id="leaderboard-template" type="text/template">
+            <div id="banner">Leader Board</div>
+            <hr>
+        </script>
+
+    <script src="assets/js/libs/jquery-2.0.2.min.js"></script>
+    <script src="assets/js/libs/fastclick.js"></script>
+
+    <script src="socket.io/socket.io.js"></script>
+    <script src="assets/js/app.js"></script>
+
+</body>
 </html>

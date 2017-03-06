@@ -22,7 +22,7 @@ var connection  = mysql.createConnection({
 // Connect and create table if not exists
 connection.connect(function(err){
     if (!err) {
-        connection.query('CREATE TABLE IF NOT EXISTS playerstats (player_name TEXT, score INT)');
+        connection.query('CREATE TABLE IF NOT EXISTS player (player_name TEXT, player_win INT)');
     } else {
         console.log('Error connecting database with message ' + err.message);
     }
@@ -36,5 +36,5 @@ var io = require('socket.io').listen(server);
 
 // Listen for Socket.IO Connections. Once connected, start the game logic.
 io.sockets.on('connection', function (socket) {
-    lanquiz.initGame(io, socket, db);
+    lanquiz.initGame(io, socket, connection);
 });

@@ -161,18 +161,12 @@ function playerJoinGame(data) {
 
         // Join the room
         sock.join(data.gameId);
-        db.serialize(function () {
-            var stmt = " SELECT * FROM player WHERE player_name='" + data.playerName + "';";
-            db.get(stmt, function (err, row) {
-                if (err) throw err;
-                if (typeof row == "undefined") {
-                    db.prepare("INSERT INTO player (player_name,player_win) VALUES(?,?)").run(data.playerName, 0).finalize();
-                } else {
-                    console.log("row is: ", row);
-                }
-            });
-        });
-        //console.log('Player ' + data.playerName + ' joining game: ' + data.gameId );
+        var result = db.query("SELECT * FROM player WHERE player_name='" + data.playerName + "';");
+        if (typeof result == 'undefined') {
+            db.query("INSERT INTO player (player_name, player_win) VALUES ('" + data.playerName +"', 0);");
+        }
+
+        console.log('Player ' + data.playerName + ' joining game: ' + data.gameId );
 
         // Emit an event notifying the clients that the player has joined the room.
         io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
@@ -221,7 +215,7 @@ function playerRestart(data) {
  */
 function sendWord(wordPoolIndex, gameId) {
     var data = getWordData(wordPoolIndex);
-    io.sockets.in(data.gameId).emit('newWordData', data);
+    io.sockets.in(gameId).emit('newWordData', data);
 }
 
 /**

@@ -38,6 +38,7 @@ body {
 
 .intro {
 	max-width: 300px;
+	margin: 0 auto;
 
 	h1 {
 		margin: 6px 0 20px;
@@ -47,6 +48,51 @@ body {
 		width: 100%;
 		font-size: 16px;
 		padding: 10px;
+	}
+}
+
+#wordArea {
+	font-size: 40px;
+	padding: 40px;
+	border: 2px solid $color-giraffe;
+	margin-bottom: 24px;
+}
+
+.playerScore {
+	width: 50%;
+
+	.playerName {
+		font-weight: bold;
+	}
+
+	.score {
+		padding: 10px;
+		background-color: $color-giraffe;
+		width: 60px;
+		margin: 10px auto;
+	}
+}
+
+#player1Score {
+	float: left;
+}
+
+#player2Score {
+	float: right;
+}
+
+.info {
+	input {
+		width: 100%;
+		max-width: 300px;
+		padding: 10px 20px;
+		text-align: center;
+		font-size: 16px;
+		background-color: $color-silver-grey;
+		border: none;
+		margin: 6px 0;
+		color: white;
+		font-weight: bold;
 	}
 }
 

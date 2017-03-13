@@ -33,7 +33,6 @@ exports.initGame = function (sio, socket, sdb) {
     // Player Events
     gameSocket.on('playerJoinGame', playerJoinGame);
     gameSocket.on('playerAnswer', playerAnswer);
-    gameSocket.on('playerRestart', playerRestart);
 };
 
 /* *******************************
@@ -45,38 +44,44 @@ exports.initGame = function (sio, socket, sdb) {
 /**
  * The 'START' button was clicked and 'hostCreateNewGame' event occurred.
  */
-function hostCreateNewGame() {
+function hostCreateNewGame(data) {
+
     // Create a unique Socket.IO Room
     var thisGameId = ( Math.random() * 100000 ) | 0;
 
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
-    this.emit('newGameCreated', {gameId: thisGameId, mySocketId: this.id});
+    this.emit('newGameCreated', {gameId: thisGameId, levelId: data.level, mySocketId: this.id});
 
     // Join the Room and wait for the players
     this.join(thisGameId.toString());
 }
 
-/*
+/**
  * Two players have joined. Alert the host!
  * @param gameId The game ID / room ID
  */
-function hostPrepareGame(gameId) {
+function hostPrepareGame(gameId, levelId) {
     var sock = this;
     var data = {
         mySocketId: sock.id,
-        gameId: gameId
+        gameId: gameId,
+        levelId: levelId
     };
-    //console.log("All Players Present. Preparing game...");
+
     io.sockets.in(data.gameId).emit('beginNewGame', data);
 }
 
-/*
+/**
  * The Countdown has finished, and the game begins!
  * @param gameId The game ID / room ID
+ * @param levelId The game level ID
  */
-function hostStartGame(gameId) {
-    console.log('Game Started.');
-    sendWord(0, gameId);
+function hostStartGame(gameId, levelId) {
+    if (levelId === 1) {
+        sendWord(0, gameId);
+    } else {
+        sendQuestion(0, gameId);
+    }
 }
 
 /**
@@ -84,24 +89,49 @@ function hostStartGame(gameId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
-    if (data.round < wordPool.length) {
-        // Send a new set of words back to the host and players.
-        sendWord(data.round, data.gameId);
-    } else {
 
-        if (!data.done) {
-            // updating players win count
-            db.all("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
+    // Determine pool based on the level
+    var pool = null;
+    if (data.levelId === 1) {
+        pool = wordPool;
+    } else {
+        pool = questionPool;
+    }
+
+    // Next round if we have more questions - else end game
+    if (data.round < pool.length && data.levelId == 1) {
+        sendWord(data.round, data.gameId);
+    } else if (data.round < pool.length && data.levelId == 2) {
+        sendQuestion(data.round, data.gameId);
+    } else {
+        endGame(data);
+    }
+}
+
+/**
+ * End the game if all rounds are played
+ *
+ * @param data
+ */
+function endGame(data) {
+
+    if (data.winner && !data.done) {
+
+        // updating players win count
+        db.query('SELECT * FROM player WHERE player_name=? LIMIT 1', data.winner, function (err, rows) {
+
+            if (rows) {
                 rows.forEach(function (row) {
                     win = row.player_win;
                     win++;
-                    console.log(win);
-                    db.run("UPDATE player SET player_win = ? WHERE player_name = ?", win, data.winner);
-                    console.log(row.player_name, row.player_win);
+                    db.query('UPDATE player SET player_win = ? WHERE player_name = ?', [win, data.winner], function () {
+                    });
                 });
-            });
-            data.done++;
-        }
+            }
+        });
+
+        data.done = true;
+    } else {
         // If the current round exceeds the number of words, send the 'gameOver' event.
         io.sockets.in(data.gameId).emit('gameOver', data);
     }
@@ -109,7 +139,6 @@ function hostNextRound(data) {
 
 // function for finding leader
 function findLeader() {
-    console.log("finding leader");
     var sock = this;
     var i = 0;
     leader = {};
@@ -119,12 +148,9 @@ function findLeader() {
                 leader[i] = {};
                 leader[i].name = row.player_name;
                 leader[i].win = row.player_win;
-                console.log(row.player_name);
-                console.log(row.player_win);
                 i++;
             });
         }
-        console.log("found leader");
         sock.emit('showLeader', leader);
     });
 
@@ -142,7 +168,6 @@ function findLeader() {
  * @param data Contains data entered via player's input - playerName and gameId.
  */
 function playerJoinGame(data) {
-    //console.log('Player ' + data.playerName + 'attempting to join game: ' + data.gameId );
 
     // A reference to the player's Socket.IO socket object
     var sock = this;
@@ -151,9 +176,6 @@ function playerJoinGame(data) {
     // var room = gameSocket.manager.rooms["/" + data.gameId];
     var room = gameSocket.adapter.rooms[data.gameId];
 
-    console.log(room);
-    console.log(data.gameId);
-
     // If the room exists...
     if (room !== undefined) {
         // attach the socket id to the data object.
@@ -161,19 +183,25 @@ function playerJoinGame(data) {
 
         // Join the room
         sock.join(data.gameId);
-        var result = db.query("SELECT * FROM player WHERE player_name='" + data.playerName + "';");
-        if (typeof result == 'undefined') {
-            db.query("INSERT INTO player (player_name, player_win) VALUES ('" + data.playerName +"', 0);");
-        }
 
-        console.log('Player ' + data.playerName + ' joining game: ' + data.gameId );
+        // add username if unknown
+        db.query('SELECT * FROM player WHERE player_name = ?', data.playerName, function (err, rows) {
+            if (err) throw err;
+
+            if (!rows.length) {
+                var user = {player_name: data.playerName, player_win: 0};
+                db.query('INSERT INTO player SET ?', user, function (err, res) {
+                    if (err) throw err;
+                });
+            }
+        });
 
         // Emit an event notifying the clients that the player has joined the room.
         io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
 
     } else {
         // Otherwise, send an error message back to the player.
-        this.emit('error', {message: "This room does not exist."});
+        this.emit('gameError', {message: "This room does not exist."});
     }
 }
 
@@ -182,23 +210,9 @@ function playerJoinGame(data) {
  * @param data gameId
  */
 function playerAnswer(data) {
-    // console.log('Player ID: ' + data.playerId + ' answered a question with: ' + data.answer);
-
     // The player's answer is attached to the data object.  \
     // Emit an event with the answer so it can be checked by the 'Host'
     io.sockets.in(data.gameId).emit('hostCheckAnswer', data);
-}
-
-/**
- * The game is over, and a player has clicked a button to restart the game.
- * @param data
- */
-function playerRestart(data) {
-    // console.log('Player: ' + data.playerName + ' ready for new game.');
-
-    // Emit the player's data back to the clients in the game room.
-    data.playerId = this.id;
-    io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
 }
 
 /* *************************
@@ -216,6 +230,18 @@ function playerRestart(data) {
 function sendWord(wordPoolIndex, gameId) {
     var data = getWordData(wordPoolIndex);
     io.sockets.in(gameId).emit('newWordData', data);
+}
+
+/**
+ * Get a question for the host, and a list of words for the player.
+ *
+ * @param wordPoolIndex
+ * @param gameId The room identifier
+ */
+function sendQuestion(wordPoolIndex, gameId) {
+
+    var data = getQuestionData(wordPoolIndex);
+    io.sockets.in(gameId).emit('newQuestionData', data);
 }
 
 /**
@@ -244,6 +270,34 @@ function getWordData(i) {
         word: words[0],   // Displayed Word
         answer: words[1], // Correct Answer
         list: decoys      // Word list for player (decoys and answer)
+    };
+}
+
+/**
+ * This function does all the work of getting a new question from the pile
+ * and organizing the data to be sent back to the clients.
+ *
+ * @param i The index of the questionPool.
+ * @returns {{round: *, question: *, answer: *, list: Array}}
+ */
+function getQuestionData(i) {
+    // Randomize the order of the available questions.
+    // The first element in the randomized array will be displayed on the host screen.
+    // The second element will be hidden in a list of answer options as the correct answer
+
+    // Randomize the order of the answer options
+    var options = shuffle(questionPool[i].options);
+
+    // Pick a random spot in the options list to put the correct answer
+    var rnd = Math.floor(Math.random() * 5);
+    options.splice(rnd, 0, questionPool[i].answer);
+
+    // Package the words into a single object.
+    return {
+        round: i,
+        question: questionPool[i].question,   // Displayed Question
+        answer: questionPool[i].answer, // Correct Answer
+        list: options      // Answer options list for player
     };
 }
 
@@ -330,5 +384,46 @@ var wordPool = [
     {
         "words": ["stone", "tones", "steno", "onset"],
         "decoys": ["snout", "tongs", "stent", "tense", "terns", "santo", "stony", "toons", "snort", "stint"]
+    }
+];
+
+/**
+ * Each element in the array provides data for a single round in the game.
+ *
+ * Five random "options" are chosen to make up the list displayed to the player.
+ * The correct answer is randomly inserted into the list of chosen options.
+ *
+ * @type {Array}
+ */
+var questionPool = [
+    {
+        'question': 'Great Britain is made up of which three countries?',
+        'answer': 'England, Wales, and Scotland',
+        'options': ['Spain, England, and Portugal', 'Greece, Turkey, and Egypt']
+    },
+    {
+        'question': 'What is the form of currency used in England?',
+        'answer': 'British pound',
+        'options': ['Euro', 'British dollar']
+    },
+    {
+        'question': 'In which of the following cities was Shakespeare born?',
+        'answer': 'Stratford',
+        'options': ['Bath', 'London']
+    },
+    {
+        'question': 'Which city offers the "Magical Mystery Tour" of famous Beatles landmarks?',
+        'answer': 'Liverpool',
+        'options': ['Cambridge', 'London']
+    },
+    {
+        'question': 'Who is Margaret Thatcher?',
+        'answer': 'Britain\'s first woman Prime Minister',
+        'options': ['Britain\'s longest-ruling monarch', 'The daughter of King Henry VIII']
+    },
+    {
+        'question': 'What clothing do the British call "jumpers?"',
+        'answer': 'Sweaters',
+        'options': ['Jackets', 'Jeans']
     }
 ];

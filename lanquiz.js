@@ -121,6 +121,9 @@ function endGame(data) {
     if (!data.done) {
         // updating players win count
         db.query("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
+            console.log(rows);
+            console.log(data.winner);
+
             rows.forEach(function (row) {
                 win = row.player_win;
                 win++;
@@ -189,12 +192,41 @@ function playerJoinGame(data) {
 
         // Join the room
         sock.join(data.gameId);
-        var result = db.query("SELECT * FROM player WHERE player_name='" + data.playerName + "';");
-        if (typeof result == 'undefined') {
-            db.query("INSERT INTO player (player_name, player_win) VALUES ('" + data.playerName +"', 0);");
+        // var result = db.query("SELECT * FROM player WHERE player_name='" + data.playerName + "';");
+
+        var username;
+
+        db.query('SELECT * FROM player WHERE player_name = ?', data.playerName, function(err,rows){
+            if(err) throw err;
+
+            console.log('Data received from Db:\n');
+            console.log(rows);
+
+            if (rows.length > 0) {
+                setUserName(rows[0].player_name);
+            }
+
+        });
+
+        console.log("username", username);
+
+        if (typeof username == "undefined") {
+            var user = { player_name: data.playerName, player_win: 0 };
+            db.query('INSERT INTO player SET ?', user, function(err,res){
+                if(err) throw err;
+        
+                if (err) {
+                    console.log('error inserting new user:', err);
+                } else {
+                    console.log('New user query result:', res);
+                }
+            });
         }
 
-        console.log('Player ' + data.playerName + ' joining game: ' + data.gameId );
+        function setUserName(value) {
+            username = value;
+            console.log(username);
+        }
 
         // Emit an event notifying the clients that the player has joined the room.
         io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
@@ -254,8 +286,6 @@ function sendWord(wordPoolIndex, gameId) {
  */
 function sendQuestion(wordPoolIndex, gameId) {
 
-    console.log("sendQuestion");
-
     var data = getQuestionData(wordPoolIndex);
     io.sockets.in(gameId).emit('newQuestionData', data);
 }
@@ -301,17 +331,12 @@ function getQuestionData(i) {
     // The first element in the randomized array will be displayed on the host screen.
     // The second element will be hidden in a list of answer options as the correct answer
 
-    console.log("question pool");
-    console.log(questionPool[i]);
-
     // Randomize the order of the answer options
     var options = shuffle(questionPool[i].options);
 
     // Pick a random spot in the options list to put the correct answer
     var rnd = Math.floor(Math.random() * 5);
     options.splice(rnd, 0, questionPool[i].answer);
-
-    console.log("getQuestion data");
 
     // Package the words into a single object.
     return {

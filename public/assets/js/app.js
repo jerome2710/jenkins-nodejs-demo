@@ -118,7 +118,6 @@ jQuery(function($){
          */
         hostCheckAnswer : function(data) {
             if (App.myRole === 'Host') {
-                console.log("Start answer checking");
                 App.Host.checkAnswer(data);
             }
         },
@@ -399,9 +398,6 @@ jQuery(function($){
                 // Verify that the answer clicked is from the current round.
                 // This prevents a 'late entry' from a player whos screen has not
                 // yet updated to the current round.
-
-                console.log("Checking answer");
-
 
                 if (data.round === App.currentRound) {
 

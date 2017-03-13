@@ -20,20 +20,20 @@
     <body>
 
 
-        <div id="gameArea" class="wrapper">
+        <div id="gameArea">
             <!-- This is where the templates defined below will be used -->
         </div>
 
         <!-- Main Title Screen that appears when the page loads for the first time -->
         <script id="intro-screen-template" type="text/template">
 
-            <div class="intro">
+            <div class="intro wrapper">
 
                 <h1>Lanquiz</h1>
 
                 <div class="buttons">
-                    <button id="btnCreateGame" class="btn btn-full">CREATE</button>
-                    <button id="btnCreateGameLevel2" class="btn btn-full">CREATE level 2</button>
+                    <button id="btnCreateGameLevelOne" class="btn btn-full">CREATE Level 1</button>
+                    <button id="btnCreateGameLevelTwo" class="btn btn-full">CREATE Level 2</button>
                     <button id="btnJoinGame" class="btn btn-full">JOIN</button>
                     <button id="leaderboard" class="btn btn-full">LEADER BOARD</button>
                 </div>
@@ -44,7 +44,10 @@
 
         <!-- This screen appears when a user clicks "CREATE" on the Title Screen -->
         <script id="create-game-template" type="text/template">
-            <div class="createGameWrapper">
+            <div class="createGameWrapper wrapper">
+
+                <div class="info">You create a new game with level </div>
+                <div id="gameLevel">&nbsp;</div>
 
                 <div class="info">Open this site on your mobile device:</div>
                 <div id="gameURL" class="infoBig">Error!</div>
@@ -58,13 +61,15 @@
 
         <!-- This scrreen appears when a player clicks "JOIN" on the Title Screen -->
         <script id="join-game-template" type="text/template">
-            <div class="joinGameWrapper">
+            <div class="joinGameWrapper wrapper">
                 <div class="info">
-                    <input id="inputPlayerName" type="text" placeholder="Uw naam"/>
+                    <label for="inputPlayerName">Your Name:</label>
+                    <input id="inputPlayerName" type="text" />
                 </div>
 
                 <div class="info">
-                    <input id="inputGameId" type="text" placeholder="Game ID"/>
+                    <label for="inputGameId">Game ID:</label>
+                    <input id="inputGameId" type="text"/>
                 </div>
 
                 <div class="info buttons">
@@ -79,15 +84,12 @@
             <div id="wordArea">
                 <div id="hostWord">5</div>
             </div>
-
             <div id="playerScores">
                 <div id="player1Score" class="playerScore">
-                    <div class="playerName">Player 1</div>
-                    <div class="score">0</div>
+                    <span class="score">0</span><span class="playerName">Player 1</span>
                 </div>
                 <div id="player2Score" class="playerScore">
-                    <div class="playerName">Player 2</div>
-                    <div class="score">0</div>
+                    <span class="playerName">Player 2</span><span class="score">0</span>
                 </div>
             </div>
         </script>

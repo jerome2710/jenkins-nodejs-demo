@@ -588,7 +588,7 @@ jQuery(function ($) {
                                 .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
                                 .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>
                             )
-                        )
+                        );
                 });
 
                 // Insert the list onto the screen.

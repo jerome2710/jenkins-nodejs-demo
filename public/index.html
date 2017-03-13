@@ -20,14 +20,14 @@
     <body>
 
 
-        <div id="gameArea">
+        <div id="gameArea" class="wrapper">
             <!-- This is where the templates defined below will be used -->
         </div>
 
         <!-- Main Title Screen that appears when the page loads for the first time -->
         <script id="intro-screen-template" type="text/template">
 
-            <div class="intro wrapper">
+            <div class="intro">
 
                 <h1>Lanquiz</h1>
 
@@ -44,7 +44,7 @@
 
         <!-- This screen appears when a user clicks "CREATE" on the Title Screen -->
         <script id="create-game-template" type="text/template">
-            <div class="createGameWrapper wrapper">
+            <div class="createGameWrapper">
 
                 <div class="info">You create a new game with level </div>
                 <div id="gameLevel">&nbsp;</div>
@@ -61,15 +61,13 @@
 
         <!-- This scrreen appears when a player clicks "JOIN" on the Title Screen -->
         <script id="join-game-template" type="text/template">
-            <div class="joinGameWrapper wrapper">
+            <div class="joinGameWrapper">
                 <div class="info">
-                    <label for="inputPlayerName">Your Name:</label>
-                    <input id="inputPlayerName" type="text" />
+                    <input id="inputPlayerName" type="text" placeholder="Uw naam"/>
                 </div>
 
                 <div class="info">
-                    <label for="inputGameId">Game ID:</label>
-                    <input id="inputGameId" type="text"/>
+                    <input id="inputGameId" type="text" placeholder="Game ID"/>
                 </div>
 
                 <div class="info buttons">
@@ -86,10 +84,12 @@
             </div>
             <div id="playerScores">
                 <div id="player1Score" class="playerScore">
-                    <span class="score">0</span><span class="playerName">Player 1</span>
+                    <div class="playerName">Player 1</div>
+                    <div class="score">0</div>
                 </div>
                 <div id="player2Score" class="playerScore">
-                    <span class="playerName">Player 2</span><span class="score">0</span>
+                    <div class="playerName">Player 2</div>
+                    <div class="score">0</div>
                 </div>
             </div>
         </script>

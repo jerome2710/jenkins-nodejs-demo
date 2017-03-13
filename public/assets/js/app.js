@@ -4,7 +4,7 @@ jQuery(function($){
     /**
      * All the code relevant to Socket.IO is collected in the IO namespace.
      *
-     * @type {{init: Function, bindEvents: Function, onConnected: Function, onNewGameCreated: Function, playerJoinedRoom: Function, beginNewGame: Function, onNewWordData: Function, hostCheckAnswer: Function, gameOver: Function, error: Function}}
+     * @type {{init: Function, bindEvents: Function, onConnected: Function, onNewGameCreated: Function, playerJoinedRoom: Function, beginNewGame: Function, onNewWordData: Function, newQuestionData: Function, hostCheckAnswer: Function, gameOver: Function, error: Function}}
      */
     var IO = {
 
@@ -27,6 +27,7 @@ jQuery(function($){
             IO.socket.on('playerJoinedRoom', IO.playerJoinedRoom );
             IO.socket.on('beginNewGame', IO.beginNewGame );
             IO.socket.on('newWordData', IO.onNewWordData);
+            IO.socket.on('newQuestionData', IO.onNewQuestionData);
             IO.socket.on('hostCheckAnswer', IO.hostCheckAnswer);
             IO.socket.on('gameOver', IO.gameOver);
             IO.socket.on('error', IO.error );
@@ -101,12 +102,23 @@ jQuery(function($){
             App[App.myRole].newWord(data);
         },
 
+        onNewQuestionData : function(data) {
+            // Update the current round
+            App.currentRound = data.round;
+            
+            console.log("onNewQuestionData");
+
+            // Change the word for the Host and Player
+            App[App.myRole].newQuestion(data);
+        },
+
         /**
          * A player answered. If this is the host, check the answer.
          * @param data
          */
         hostCheckAnswer : function(data) {
             if (App.myRole === 'Host') {
+                console.log("Start answer checking");
                 App.Host.checkAnswer(data);
             }
         },
@@ -370,6 +382,15 @@ jQuery(function($){
                 App.Host.currentRound = data.round;
             },
 
+            newQuestion : function(data) {
+                // Insert the new word into the DOM
+                $('#hostWord').text(data.question);
+
+                // Update the data for the current round
+                App.Host.currentCorrectAnswer = data.answer;
+                App.Host.currentRound = data.round;
+            },
+
             /**
              * Check the answer clicked by a player.
              * @param data{{round: *, playerId: *, answer: *, gameId: *}}
@@ -378,6 +399,10 @@ jQuery(function($){
                 // Verify that the answer clicked is from the current round.
                 // This prevents a 'late entry' from a player whos screen has not
                 // yet updated to the current round.
+
+                console.log("Checking answer");
+
+
                 if (data.round === App.currentRound) {
 
                     // Get the player's score
@@ -387,6 +412,8 @@ jQuery(function($){
                     if (App.Host.currentCorrectAnswer === data.answer) {
                         // Add 5 to the player's score
                         $pScore.text( +$pScore.text() + 5 );
+
+                        console.log("answer correct");
 
                         // Advance the round
                         App.currentRound += 1;
@@ -489,7 +516,7 @@ jQuery(function($){
              * and clicked Start.
              */
             onPlayerStartClick: function() {
-                // console.log('Player clicked "Start"');
+                console.log('Player clicked "Start"');
 
                 // collect data to send to the server
                 var data = {
@@ -512,6 +539,8 @@ jQuery(function($){
                 // console.log('Clicked Answer Button');
                 var $btn = $(this);      // the tapped button
                 var answer = $btn.val(); // The tapped word
+
+                console.log("Answer is clicked");
 
                 // Send the player info and tapped word to the server so
                 // the host can check the answer.
@@ -583,6 +612,28 @@ jQuery(function($){
                                 .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>
                             )
                         );
+                });
+
+                // Insert the list onto the screen.
+                $('#gameArea').html($list);
+            },
+
+            newQuestion : function(data) {
+                // Create an unordered list element
+                var $list = $('<ul/>').attr('id','ulAnswers');
+
+                // Insert a list item for each word in the word list
+                // received from the server.
+                $.each(data.list, function(){
+                    $list                                //  <ul> </ul>
+                        .append( $('<li/>')              //  <ul> <li> </li> </ul>
+                            .append( $('<button/>')      //  <ul> <li> <button> </button> </li> </ul>
+                                .addClass('btnAnswer')   //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .addClass('btn')         //  <ul> <li> <button class='btnAnswer'> </button> </li> </ul>
+                                .val(this)               //  <ul> <li> <button class='btnAnswer' value='word'> </button> </li> </ul>
+                                .html(this)              //  <ul> <li> <button class='btnAnswer' value='word'>word</button> </li> </ul>
+                            )
+                        )
                 });
 
                 // Insert the list onto the screen.

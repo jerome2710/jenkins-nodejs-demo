@@ -83,7 +83,7 @@ function hostStartGame(gameId, levelId) {
     if (levelId === 1) {
         sendWord(0, gameId);
     } else {
-        // sendQuestion();
+        sendQuestion(0, gameId);
     }
 }
 
@@ -92,6 +92,7 @@ function hostStartGame(gameId, levelId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
+    // console.log("next round level " + data.levelId);
 
     // Determine pool based on the level
     var pool = null;
@@ -102,8 +103,10 @@ function hostNextRound(data) {
     }
 
     // Next round if we have more questions - else end game
-    if (data.round < pool.length) {
-        sendWord(data.round, data.gameId, data.levelId);
+    if (data.round < pool.length && data.levelId == 1) {
+        sendWord(data.round, data.gameId);
+    } else if (data.round < pool.length && data.levelId == 2) {
+        sendQuestion(data.round, data.gameId);
     } else {
         endGame(data);
     }
@@ -207,7 +210,7 @@ function playerJoinGame(data) {
  * @param data gameId
  */
 function playerAnswer(data) {
-    // console.log('Player ID: ' + data.playerId + ' answered a question with: ' + data.answer);
+    console.log('Player ID: ' + data.playerId + ' answered a question with: ' + data.answer);
 
     // The player's answer is attached to the data object.  \
     // Emit an event with the answer so it can be checked by the 'Host'
@@ -244,6 +247,20 @@ function sendWord(wordPoolIndex, gameId) {
 }
 
 /**
+ * Get a question for the host, and a list of words for the player.
+ *
+ * @param wordPoolIndex
+ * @param gameId The room identifier
+ */
+function sendQuestion(wordPoolIndex, gameId) {
+
+    console.log("sendQuestion");
+
+    var data = getQuestionData(wordPoolIndex);
+    io.sockets.in(gameId).emit('newQuestionData', data);
+}
+
+/**
  * This function does all the work of getting a new words from the pile
  * and organizing the data to be sent back to the clients.
  *
@@ -269,6 +286,39 @@ function getWordData(i) {
         word: words[0],   // Displayed Word
         answer: words[1], // Correct Answer
         list: decoys      // Word list for player (decoys and answer)
+    };
+}
+
+/**
+ * This function does all the work of getting a new question from the pile
+ * and organizing the data to be sent back to the clients.
+ *
+ * @param i The index of the questionPool.
+ * @returns {{round: *, question: *, answer: *, list: Array}}
+ */
+function getQuestionData(i) {
+    // Randomize the order of the available questions.
+    // The first element in the randomized array will be displayed on the host screen.
+    // The second element will be hidden in a list of answer options as the correct answer
+
+    console.log("question pool");
+    console.log(questionPool[i]);
+
+    // Randomize the order of the answer options
+    var options = shuffle(questionPool[i].options);
+
+    // Pick a random spot in the options list to put the correct answer
+    var rnd = Math.floor(Math.random() * 5);
+    options.splice(rnd, 0, questionPool[i].answer);
+
+    console.log("getQuestion data");
+
+    // Package the words into a single object.
+    return {
+        round: i,
+        question: questionPool[i].question,   // Displayed Question
+        answer: questionPool[i].answer, // Correct Answer
+        list: options      // Answer options list for player
     };
 }
 
@@ -358,4 +408,44 @@ var wordPool = [
     }
 ];
 
-var questionPool = wordPool;
+/**
+ * Each element in the array provides data for a single round in the game.
+ *
+ * Five random "options" are chosen to make up the list displayed to the player.
+ * The correct answer is randomly inserted into the list of chosen options.
+ *
+ * @type {Array}
+ */
+var questionPool = [
+    {
+        "question": 'Wat is "Hond" in het Engels?',
+        "answer": "Dog",
+        "options": ["Cat", "Bird", "Rabbit", "Giraffe"]
+    },
+    {
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    },
+    {
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    },{
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    },{
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    },{
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    },{
+        "question": "Wat is de hoofdstad van Engeland?",
+        "answer": "Londen",
+        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+    }
+];

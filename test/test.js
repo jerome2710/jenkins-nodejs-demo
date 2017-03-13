@@ -13,7 +13,7 @@ describe('Lanquiz Multiplayer Language Game', function() {
         host.on('connect', function() {
 
             // pretend to be a host creating a game
-            host.emit('hostCreateNewGame');
+            host.emit('hostCreateNewGame', [1]);
 
             // when the server created a new game
             host.on('newGameCreated', function(data) {

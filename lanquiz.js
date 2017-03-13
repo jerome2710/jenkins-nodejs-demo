@@ -33,7 +33,6 @@ exports.initGame = function (sio, socket, sdb) {
     // Player Events
     gameSocket.on('playerJoinGame', playerJoinGame);
     gameSocket.on('playerAnswer', playerAnswer);
-    gameSocket.on('playerRestart', playerRestart);
 };
 
 /* *******************************
@@ -57,7 +56,7 @@ function hostCreateNewGame(data) {
     this.join(thisGameId.toString());
 }
 
-/*
+/**
  * Two players have joined. Alert the host!
  * @param gameId The game ID / room ID
  */
@@ -68,7 +67,7 @@ function hostPrepareGame(gameId, levelId) {
         gameId: gameId,
         levelId: levelId
     };
-    //console.log("All Players Present. Preparing game...");
+
     io.sockets.in(data.gameId).emit('beginNewGame', data);
 }
 
@@ -78,8 +77,6 @@ function hostPrepareGame(gameId, levelId) {
  * @param levelId The game level ID
  */
 function hostStartGame(gameId, levelId) {
-    console.log('Game Started with level: ' + levelId);
-
     if (levelId === 1) {
         sendWord(0, gameId);
     } else {
@@ -92,7 +89,6 @@ function hostStartGame(gameId, levelId) {
  * @param data Sent from the client. Contains the current round and gameId (room)
  */
 function hostNextRound(data) {
-    // console.log("next round level " + data.levelId);
 
     // Determine pool based on the level
     var pool = null;
@@ -118,29 +114,31 @@ function hostNextRound(data) {
  * @param data
  */
 function endGame(data) {
-    if (!data.done) {
-        // updating players win count
-        db.query("SELECT * FROM player WHERE player_name=?", data.winner, function (err, rows) {
-            console.log(rows);
-            console.log(data.winner);
 
-            rows.forEach(function (row) {
-                win = row.player_win;
-                win++;
-                console.log(win);
-                db.run("UPDATE player SET player_win = ? WHERE player_name = ?", win, data.winner);
-                console.log(row.player_name, row.player_win);
-            });
+    if (data.winner && !data.done) {
+
+        // updating players win count
+        db.query('SELECT * FROM player WHERE player_name=? LIMIT 1', data.winner, function (err, rows) {
+
+            if (rows) {
+                rows.forEach(function (row) {
+                    win = row.player_win;
+                    win++;
+                    db.query('UPDATE player SET player_win = ? WHERE player_name = ?', [win, data.winner], function () {
+                    });
+                });
+            }
         });
-        data.done++;
+
+        data.done = true;
+    } else {
+        // If the current round exceeds the number of words, send the 'gameOver' event.
+        io.sockets.in(data.gameId).emit('gameOver', data);
     }
-    // If the current round exceeds the number of words, send the 'gameOver' event.
-    io.sockets.in(data.gameId).emit('gameOver', data);
 }
 
 // function for finding leader
 function findLeader() {
-    console.log("finding leader");
     var sock = this;
     var i = 0;
     leader = {};
@@ -150,12 +148,9 @@ function findLeader() {
                 leader[i] = {};
                 leader[i].name = row.player_name;
                 leader[i].win = row.player_win;
-                console.log(row.player_name);
-                console.log(row.player_win);
                 i++;
             });
         }
-        console.log("found leader");
         sock.emit('showLeader', leader);
     });
 
@@ -173,7 +168,6 @@ function findLeader() {
  * @param data Contains data entered via player's input - playerName and gameId.
  */
 function playerJoinGame(data) {
-    //console.log('Player ' + data.playerName + 'attempting to join game: ' + data.gameId );
 
     // A reference to the player's Socket.IO socket object
     var sock = this;
@@ -182,9 +176,6 @@ function playerJoinGame(data) {
     // var room = gameSocket.manager.rooms["/" + data.gameId];
     var room = gameSocket.adapter.rooms[data.gameId];
 
-    console.log(room);
-    console.log(data.gameId);
-
     // If the room exists...
     if (room !== undefined) {
         // attach the socket id to the data object.
@@ -192,48 +183,25 @@ function playerJoinGame(data) {
 
         // Join the room
         sock.join(data.gameId);
-        // var result = db.query("SELECT * FROM player WHERE player_name='" + data.playerName + "';");
 
-        var username;
+        // add username if unknown
+        db.query('SELECT * FROM player WHERE player_name = ?', data.playerName, function (err, rows) {
+            if (err) throw err;
 
-        db.query('SELECT * FROM player WHERE player_name = ?', data.playerName, function(err,rows){
-            if(err) throw err;
-
-            console.log('Data received from Db:\n');
-            console.log(rows);
-
-            if (rows.length > 0) {
-                setUserName(rows[0].player_name);
+            if (!rows.length) {
+                var user = {player_name: data.playerName, player_win: 0};
+                db.query('INSERT INTO player SET ?', user, function (err, res) {
+                    if (err) throw err;
+                });
             }
-
         });
-
-        console.log("username", username);
-
-        if (typeof username == "undefined") {
-            var user = { player_name: data.playerName, player_win: 0 };
-            db.query('INSERT INTO player SET ?', user, function(err,res){
-                if(err) throw err;
-        
-                if (err) {
-                    console.log('error inserting new user:', err);
-                } else {
-                    console.log('New user query result:', res);
-                }
-            });
-        }
-
-        function setUserName(value) {
-            username = value;
-            console.log(username);
-        }
 
         // Emit an event notifying the clients that the player has joined the room.
         io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
 
     } else {
         // Otherwise, send an error message back to the player.
-        this.emit('error', {message: "This room does not exist."});
+        this.emit('gameError', {message: "This room does not exist."});
     }
 }
 
@@ -242,23 +210,9 @@ function playerJoinGame(data) {
  * @param data gameId
  */
 function playerAnswer(data) {
-    console.log('Player ID: ' + data.playerId + ' answered a question with: ' + data.answer);
-
     // The player's answer is attached to the data object.  \
     // Emit an event with the answer so it can be checked by the 'Host'
     io.sockets.in(data.gameId).emit('hostCheckAnswer', data);
-}
-
-/**
- * The game is over, and a player has clicked a button to restart the game.
- * @param data
- */
-function playerRestart(data) {
-    // console.log('Player: ' + data.playerName + ' ready for new game.');
-
-    // Emit the player's data back to the clients in the game room.
-    data.playerId = this.id;
-    io.sockets.in(data.gameId).emit('playerJoinedRoom', data);
 }
 
 /* *************************
@@ -443,34 +397,33 @@ var wordPool = [
  */
 var questionPool = [
     {
-        "question": 'Wat is "Hond" in het Engels?',
-        "answer": "Dog",
-        "options": ["Cat", "Bird", "Rabbit", "Giraffe"]
+        'question': 'Great Britain is made up of which three countries?',
+        'answer': 'England, Wales, and Scotland',
+        'options': ['Spain, England, and Portugal', 'Greece, Turkey, and Egypt']
     },
     {
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+        'question': 'What is the form of currency used in England?',
+        'answer': 'British pound',
+        'options': ['Euro', 'British dollar']
     },
     {
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
-    },{
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
-    },{
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
-    },{
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
-    },{
-        "question": "Wat is de hoofdstad van Engeland?",
-        "answer": "Londen",
-        "options": ["Amsterdam", "Manchester", "Liverpool", "leeds"]
+        'question': 'In which of the following cities was Shakespeare born?',
+        'answer': 'Stratford',
+        'options': ['Bath', 'London']
+    },
+    {
+        'question': 'Which city offers the "Magical Mystery Tour" of famous Beatles landmarks?',
+        'answer': 'Liverpool',
+        'options': ['Cambridge', 'London']
+    },
+    {
+        'question': 'Who is Margaret Thatcher?',
+        'answer': 'Britain\'s first woman Prime Minister',
+        'options': ['Britain\'s longest-ruling monarch', 'The daughter of King Henry VIII']
+    },
+    {
+        'question': 'What clothing do the British call "jumpers?"',
+        'answer': 'Sweaters',
+        'options': ['Jackets', 'Jeans']
     }
 ];

@@ -34,7 +34,7 @@
     "walk": "^2.3.9"
   },
   "scripts": {
-    "test": "node app.js",
+    "test": "mocha",
     "test-jenkins": "JUNIT_REPORT_PATH=build/logs/mocha-report.xml mocha --colors --reporter mocha-jenkins-reporter",
     "start": "node app.js"
   },
